@@ -1,10 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const db = require("./connection/db");
 const Joi = require("joi");
 const axios = require("axios");
-
+require('dotenv').config();
 const app = express();
 const port = 3001;
 
@@ -37,11 +36,10 @@ app.get("/api/fetch-cert", (req, res) => {
   // });
 
   getCertifcateUrl = process.env.GET_CERT_URL + process.env.KEY;
-
+  console.log("Data from remote getCertifcateUrl:", getCertifcateUrl);
   axios
     .get(getCertifcateUrl)
     .then((response) => {
-      // Handle the response from the remote server
       // console.log("Data from remote server:", response.data);
       res.json(response.data);
     })
@@ -80,30 +78,15 @@ app.post("/api/submit-form", (req, res) => {
 
   console.log("Data certFormData:", certFormData);
 
-  const sql =
-    "INSERT INTO user_requests (address, purpose, issue_date, status) VALUES (?)";
-
-  const values = [addressTo, purpose, issuedOn, employeeId];
-
-  db.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error("Error inserting into MySQL:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Data inserted into MySQL:", result);
-      // res.json({ message: "Form submitted successfully" });
-
-      certifcateServerUrl = process.env.REQUEST_CERT_URL + process.env.KEY;
-      axios
-        .post(certifcateServerUrl, certFormData)
-        .then((response) => {
-          console.log("Response from remote server:", response.data);
-        })
-        .catch((error) => {
-          console.error("Error sending POST request:", error.message);
-        });
-    }
-  });
+  certifcateServerUrl = process.env.REQUEST_CERT_URL + process.env.KEY;
+  axios
+    .post(certifcateServerUrl, certFormData)
+    .then((response) => {
+      console.log("Response from remote server:", response.data);
+    })
+    .catch((error) => {
+      console.error("Error sending POST request:", error.message);
+    });
 });
 
 app.listen(port, () => {
